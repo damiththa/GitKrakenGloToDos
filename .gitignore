@@ -18,3 +18,4 @@ var/
 
 # Serverless directories
 .serverless
+commons/auths/secrets.env.yml

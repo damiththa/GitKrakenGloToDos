@@ -8,6 +8,10 @@ provider:
   profile: Madushan
   versionFunctions: false
 
+  environment:
+    # Glo webhook 
+    GLO_WEBHOOK_SECRET: ${file(./commons/auths/secrets.env.yml):gloAPI.GLO_WEBHOOK_SECRET}
+
 functions:
   getcardUpdateInfo:
     handler: endpoints/getcardUpdateInfo.handler
