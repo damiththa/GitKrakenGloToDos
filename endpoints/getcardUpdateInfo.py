@@ -3,7 +3,7 @@ import json
 from commons.auths.checkSignature import verifySignature
 
 def handler(event, context):
-    print (event)
+    # print (event)
     
     event_body = event['body']
     event_headers = event['headers']
@@ -13,18 +13,18 @@ def handler(event, context):
     
     # verifing headder signatures
     # this is to make sure this payload was sent by GLO
-    print (verifySignature(event_body, glo_signature))
+    if verifySignature(event_body, glo_signature):
+        print ('We are good to continue')
+    else:
+        print ('AUTH. SIGNATURE FAILED!')
 
-
-    print ('I should see this - POST FUNCTION')
+    #TODO: this needs to be more meaningful
+    # aws lambda return response
     body = {
-        "message": "Go Serverless v1.0! Your function executed successfully! -- POST function",
-        "input": event
+        "come_back_to_me": 'COME BACK TO ME'
     }
-
     response = {
-        "statusCode": 200,
+        "statusCode": 200, # passing back status 200
         "body": json.dumps(body)
     }
-
     return response

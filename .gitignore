@@ -19,3 +19,7 @@ var/
 # Serverless directories
 .serverless
 commons/auths/secrets.env.yml
+
+commons/auths/__pycache__/
+
+endpoints/__pycache__/

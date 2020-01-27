@@ -10,20 +10,21 @@ import hashlib
 # signature = hmac.new(ss, dd, hashlib.sha1).hexdigest()
 # print("signature = {0}".format(signature))
 
-GLO_WEBHOOK_SECRET = os.environ['GLO_WEBHOOK_SECRET']
+# Getting webhook secrect and encoding to bytes
+GLO_WEBHOOK_SECRET = bytes(os.environ['GLO_WEBHOOK_SECRET'], encoding='utf8')
 
 def verifySignature(eBody, gloSignature):
     signature_check_pass = False # default values
 
-    # getting the raw body by 'stringifying' it
-    eBody_stringify = json.dumps(eBody)
+    # getting the raw body by 'stringifying' it and encoding to bytes
+    eBody_stringify = bytes(json.dumps(eBody), encoding='utf8')
 
     rtn_signature = createSignature(eBody_stringify)
+    # print (rtn_signature)
+    # print (gloSignature)
 
-    print (rtn_signature)
-    print (gloSignature)
-    # if rtn_signature == gloSignature: # checking whether signatures match
-    #     signature_check_pass = True
+    if rtn_signature == gloSignature: # checking whether signatures match
+        signature_check_pass = True
     
     return 'signature_check_pass'
     
