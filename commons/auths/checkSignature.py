@@ -26,7 +26,7 @@ def verifySignature(eBody, gloSignature):
     if rtn_signature == gloSignature: # checking whether signatures match
         signature_check_pass = True
     
-    return 'signature_check_pass'
+    return 'signature_check_pass' # TODO: This needs to be looked at
     
 def createSignature(raw_eventBody):
     signature  = hmac.new(GLO_WEBHOOK_SECRET, raw_eventBody, hashlib.sha1).hexdigest()

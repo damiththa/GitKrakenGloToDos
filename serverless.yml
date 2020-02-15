@@ -10,7 +10,10 @@ provider:
 
   environment:
     # Glo webhook 
-    GLO_WEBHOOK_SECRET: ${file(./commons/auths/secrets.env.yml):gloAPI.GLO_WEBHOOK_SECRET}
+    GLO_WEBHOOK_SECRET: ${file(./commons/secrets.env.yml):gloAPI.GLO_WEBHOOK_SECRET}
+    # GLO Board info
+    BOARD_ID: ${file(./commons/secrets.env.yml):gloBoard.BOARD_ID}
+    COLUMN_ID: ${file(./commons/secrets.env.yml):gloBoard.COLUMN_ID}
 
 functions:
   getcardUpdateInfo:

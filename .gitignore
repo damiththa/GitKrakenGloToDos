@@ -23,3 +23,5 @@ commons/auths/secrets.env.yml
 commons/auths/__pycache__/
 
 endpoints/__pycache__/
+
+commons/secrets.env.yml
