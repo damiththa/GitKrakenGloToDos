@@ -2,6 +2,7 @@ import json
 import os
 
 from commons.auths.checkSignature import verifySignature
+from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask
 
 BOARD_ID = os.environ['BOARD_ID']
 COLUMN_ID = os.environ['COLUMN_ID']
@@ -38,14 +39,21 @@ def handler(event, context):
 
         cardAction = eventBody['action'] # card action i.e. what triggered this call
         now_columnId = eventBody['card']['column_id'] # column ID i.e. where this card is now
+        labels_lst = eventBody['card']['labels'] # List of labels in the body
 
         # checking if action is 'moved_column' AND moved to the 'CLOSED' column
         if cardAction == card_actions[0] and now_columnId == COLUMN_ID :  # This is the criteria we are interested in
-            print ('we are here')
-
             print (BOARD_ID)
             print (COLUMN_ID)
 
+            # CHECKME: test how this will work on an actual list of recurring task list
+            if is_recurring_task(labels_lst): # checking if this is a recurring task
+
+                print (getRecurringTask(labels_lst))
+
+                
+
+        # TODO: Check is there is a 'due date' node is always there even when a date is not set
 
     else:
         print ('AUTH. SIGNATURE FAILED!')
