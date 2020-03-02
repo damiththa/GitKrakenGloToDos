@@ -1,14 +1,6 @@
+from datetime import timedelta
 
-# TODO: break this into its own dict in a helperVal for easy edits
-# dict holding value (in days) for each recurring task lable
-recurring_tasks_dict = {
-    'recuring task - 6 MONTHS': 240,
-    'recuring task - MONTHLY': 30,
-    'recuring task - BI-WEEKLY': 14,
-    'recuring task - WEEKLY': 7 ,
-    'recuring task - DAILY': 1
-}
-
+import commons.helpers.helperVals as helpVals
 
 def is_recurring_task(lable_dict_lst):
     """
@@ -24,11 +16,11 @@ def is_recurring_task(lable_dict_lst):
 
     isRecurringTask = False # defailt value
     for label_dict in lable_dict_lst:
-        # print (label_dict)
+        print (label_dict)
         # Ex. --> {'name': 'recuring task - MONTHLY', 'id': '5e1b3155553d4500116e11da'}
-        if label_dict['name'] in recurring_tasks_dict :
+        if label_dict['name'] in helpVals.recurring_tasks_dict :
             isRecurringTask = True
-            break # If there is at least one recurring task label found, break out of the loop also that means this is a recurring task
+            break # If there is at least one recurring task label found, break out of the loop (because we found a recurring task label)
 
     return isRecurringTask
 
@@ -48,8 +40,8 @@ def getRecurringTask(lable_dict_lst):
     thisTask_recurringTasksLabels_lst =[] # list to hold tuple of recurring task and the recurring task amount
 
     for label_dict in lable_dict_lst:
-        if label_dict['name'] in recurring_tasks_dict :
-            rt_amount = recurring_tasks_dict.get(label_dict['name']) # value of this recurring task
+        if label_dict['name'] in helpVals.recurring_tasks_dict :
+            rt_amount = helpVals.recurring_tasks_dict.get(label_dict['name']) # value of this recurring task
             rt_tup = (rt_amount, label_dict['name'])
 
             thisTask_recurringTasksLabels_lst.append(rt_tup) # into to the list
@@ -58,3 +50,19 @@ def getRecurringTask(lable_dict_lst):
     thisTask_recurringTasksLabels_lst.sort()
 
     return thisTask_recurringTasksLabels_lst[0] # from the list of tuples sorted in ascending order, returning the first tuple
+
+def taks_new_dueDate(original_task_dueDate, recurring_task_val):
+    """Returns the due date for the task.
+    This function sets the due date according to the passed in recurring task value. 
+
+    Arguments:
+        original_task_dueDate {datetime} -- Original task due date. NOTEME: If not defined TODAY is passed in as original due date        
+        recurring_task_val {int} -- Number of days to add to original due date 
+    
+    Returns:
+        [datetime] -- [new due date date/time]
+    """
+
+    new_dueDate = original_task_dueDate + timedelta(days=recurring_task_val)
+
+    return new_dueDate
