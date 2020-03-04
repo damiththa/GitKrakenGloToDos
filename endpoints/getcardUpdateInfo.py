@@ -61,22 +61,10 @@ def handler(event, context):
         # print (eventBody['card']['column_id'])
 
         cardAction = eventBody['action'] # card action i.e. what triggered this call
+
         now_columnId = eventBody['card']['column_id'] if 'column_id' in eventBody['card'] else '1122334455' # column id
         # NOTEME: Making sure there is a value for 'column_id' if not setting up with a bogus column_id
-
-        # DELETEME: now_columnId = eventBody['card']['column_id'] # column ID i.e. where this card is now
-
-        # Task due date
-        if 'due_date' in eventBody['card']: # checking if 'due_date' key in json object, which is a python dict now
-            task_dueDate = eventBody['card']['due_date'] # due date in json which is a string
-            task_dueDate = datetime.fromisoformat(task_dueDate[:-1]) # getting it is python datetime type
-            # NOTEME: to get Gitkraken Glo date rounding correct, substracting a day
-            task_dueDate = task_dueDate - timedelta(days=1) 
-        else:
-            # Due date not set, i.e. not in the json therefore setting task original due date to TODAY
-            task_dueDate = now_datetime 
-
-        print (task_dueDate)
+        # This is important as webhook fires on every event to card but we are here only interested if the card is moved to predefined column only
 
         # checking if action is 'moved_column' AND moved to the 'CLOSED' column
         if cardAction == card_actions[0] and now_columnId == COLUMN_ID :  # This is the criteria we are interested in
@@ -86,15 +74,27 @@ def handler(event, context):
             labels_lst = eventBody['card']['labels'] # List of labels in the body
 
             # checking if this is a recurring task
-            if is_recurring_task(labels_lst): 
+            if is_recurring_task(labels_lst):
 
                 print (getRecurringTask(labels_lst))
                 recurring_task_tup = getRecurringTask(labels_lst)
                 recurring_task_val = recurring_task_tup[0] # getting the first value of returned tuple Ex. --> (1, 'recurring - DAILY')
 
-                print (event_body)
+                # Finsing Task NEW due date accordingly
+                if 'due_date' in eventBody['card']: # checking if 'due_date' key in json object, which is a python dict now
+                    task_dueDate = eventBody['card']['due_date'] # due date in json which is a string
+                    task_dueDate = datetime.fromisoformat(task_dueDate[:-1]) # getting it is python datetime type
+                    # NOTEME: to get Gitkraken Glo date rounding correct, substracting a day
+                    task_dueDate = task_dueDate - timedelta(days=1) 
+                else:
+                    # Due date not set, i.e. not in the json therefore setting task original due date to TODAY
+                    task_dueDate = now_datetime 
+
+                print (task_dueDate)
 
                 print (taks_new_dueDate(task_dueDate, recurring_task_val))
+
+                print (event_body)
 
                 # THIS IS GOOD
                 # XX(event_body)
