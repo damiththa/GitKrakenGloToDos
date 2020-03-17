@@ -100,21 +100,21 @@ def cardinfo_intoDB(cardID, boardID, columnID):
         columnID {string} -- Id of the column
     
     Returns:
-        [string] -- [Returns the response gets back from dynamodb for the operation]
+        [string] -- [Returns the status response gets back from dynamodb for the operation]
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID)
     card_column_Id = db_entry_formatter(cardID, columnID)
 
     # into dynamodb table
-    response = table.put_item(
+    res = table.put_item(
         Item = {
             'Board#Card': board_card_Id,
             'Card#Column': card_column_Id
         }
     )
 
-    return response
+    return res['ResponseMetadata']['HTTPStatusCode']
 
 def cardInfo_deleteFromDB(cardID, boardID):
     """Deletes the card from the database
@@ -124,7 +124,7 @@ def cardInfo_deleteFromDB(cardID, boardID):
         boardID {string} -- Id of the board
     
     Returns:
-        [object] -- [Returns the response gets back from dynamodb for the operation]
+        [object] -- [Returns the status response gets back from dynamodb for the operation]
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID)
@@ -136,4 +136,42 @@ def cardInfo_deleteFromDB(cardID, boardID):
         }
     )
 
-    return res
+    return res['ResponseMetadata']['HTTPStatusCode']
+
+def cardInfo_updateDB(cardID, boardID, columnID):
+    """Updates the entry in the database
+    
+    Arguments:
+        cardID {string} -- Id of the card
+        boardID {string} -- Id of the board
+        columnID {string} -- Id of the column
+    
+    Returns:
+        integer -- Returns the status response gets back from aws when try to retrive the updated entry
+    """
+
+    board_card_Id = db_entry_formatter(boardID, cardID) 
+    card_column_Id = db_entry_formatter(cardID, columnID)
+
+    # updating an entry into dynamodb
+    table.update_item(
+        Key = {
+            'Board#Card': board_card_Id
+        },
+        UpdateExpression = 'SET #colName = :colValue',
+        ExpressionAttributeNames = {
+            '#colName': 'Card#Column'
+        },
+        ExpressionAttributeValues = {
+            ':colValue' : card_column_Id
+        }
+    )
+
+    # getting that updated item
+    res = table.get_item(
+        Key = {
+            'Board#Card': board_card_Id
+        }
+    )
+
+    return res['ResponseMetadata']['HTTPStatusCode']

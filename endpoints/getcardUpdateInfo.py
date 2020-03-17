@@ -7,7 +7,7 @@ import requests
 from commons.auths.checkSignature import verifySignature
 
 # helpers
-from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, taks_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB
+from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, taks_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB, cardInfo_updateDB as do_updateDB
 
 from datetime import datetime, timedelta
 from pytz import timezone # to work with correct timezones
@@ -70,16 +70,19 @@ def handler(event, context):
 
         # Next steps depensing on card action
         if cardAction == card_actions[0]: # checking if action is 'added', that means this card is just being added to the board as a new task
-            print (do_intoDB(cardId, card_BoradId, now_columnId))
+            do_intoDB(cardId, card_BoradId, now_columnId)
 
         elif cardAction == card_actions[1]: # checking if action is 'deleted', that means this card is deleted from this board
-            print (do_deleteFromDB(cardId, card_BoradId))
+            do_deleteFromDB(cardId, card_BoradId)
 
         elif cardAction == card_actions[2] : # checking if action is 'moved_column' 
             print (BOARD_ID)
             print (COLUMN_ID)
 
-            if now_columnId == COLUMN_ID : # This is the criteria we are interested in i.e. the 'CLOSED' column
+            if now_columnId != COLUMN_ID : # Checking card new column
+                do_updateDB(cardId, card_BoradId, now_columnId)
+
+            else: # This is the criteria we are interested in i.e. the 'CLOSED' column
 
                 labels_lst = eventBody['card']['labels'] # List of labels in the body
 
