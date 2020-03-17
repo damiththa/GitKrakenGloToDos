@@ -14,8 +14,22 @@ provider:
     # GLO Board info
     BOARD_ID: ${file(./commons/secrets.env.yml):gloBoard.BOARD_ID}
     COLUMN_ID: ${file(./commons/secrets.env.yml):gloBoard.COLUMN_ID}
+    # dynamodb
+    DYNAMODB_TABLE_NAME: ${file(./commons/secrets.env.yml):dynamodb.DYNAMODB_TABLE_NAME}
+    DYNAMODB_TABLE_ARN: ${file(./commons/secrets.env.yml):dynamodb.DYNAMODB_TABLE_ARN}
     # Endpoints
     POST_CARDUPDATES_ENDPOINT: ${file(./commons/secrets.env.yml):endpoints.POST_CARDUPDATES_ENDPOINT}
+  
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+       - dynamodb:Query
+       - dynamodb:Scan
+       - dynamodb:GetItem
+       - dynamodb:PutItem
+       - dynamodb:UpdateItem
+       - dynamodb:DeleteItem
+      Resource: ${file(./commons/secrets.env.yml):dynamodb.DYNAMODB_TABLE_ARN}
 
 functions:
   getcardUpdateInfo:

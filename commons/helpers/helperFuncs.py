@@ -1,6 +1,16 @@
+import json
+import boto3
+import os
+
 from datetime import timedelta
 
 import commons.helpers.helperVals as helpVals
+
+DYNAMODB_TABLE_NAME = os.environ['DYNAMODB_TABLE_NAME']
+
+# initializing dynamodb table
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
 def is_recurring_task(lable_dict_lst):
     """
@@ -66,3 +76,39 @@ def taks_new_dueDate(original_task_dueDate, recurring_task_val):
     new_dueDate = original_task_dueDate + timedelta(days=recurring_task_val)
 
     return new_dueDate
+
+def db_entry_formatter(item1, item2):
+    """Takes in items and returns concatination of those items in the format that is defined in dynamodb
+    
+    Arguments:
+        item1 {string} -- Item 1
+        item2 {string} -- Item 2 
+    
+    Returns:
+        [string] -- [Concatinated new item]
+    """
+
+    return item1+'#'+item2
+
+
+def cardinfo_intoDB(cardID, boardID, columnID):
+    """Adds new card into database
+    
+    Arguments:
+        cardID {string} -- Id of the card
+        boardID {string} -- Id of the board
+        columnID {string} -- Id of the column
+    """
+
+    board_card_Id = db_entry_formatter(boardID, cardID)
+    card_column_Id = db_entry_formatter(cardID, columnID)
+
+    # into dynamodb table
+    response = table.put_item(
+        Item = {
+            'Board#Card': board_card_Id,
+            'Card#Column': card_column_Id
+        }
+    )
+
+    return response

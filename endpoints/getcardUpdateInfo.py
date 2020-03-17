@@ -7,7 +7,7 @@ import requests
 from commons.auths.checkSignature import verifySignature
 
 # helpers
-from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, taks_new_dueDate
+from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, taks_new_dueDate, cardinfo_intoDB as do_intoDB
 
 from datetime import datetime, timedelta
 from pytz import timezone # to work with correct timezones
@@ -22,7 +22,7 @@ COLUMN_ID = os.environ['COLUMN_ID']
 POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
 
 # interested card actions list
-card_actions = ['moved_column']
+card_actions = ['added', 'moved_column']
 
 # posting to fusionqc activity logger lambda
 def XX(eBody):
@@ -39,7 +39,7 @@ def XX(eBody):
     print (res.status_code)
 
 def handler(event, context):
-    print (event)
+    # print (event)
     
     event_body = event['body']
     event_headers = event['headers']
@@ -62,46 +62,53 @@ def handler(event, context):
 
         cardAction = eventBody['action'] # card action i.e. what triggered this call
 
+        cardId = eventBody['card']['id']
+        card_BoradId = eventBody['card']['board_id']
         now_columnId = eventBody['card']['column_id'] if 'column_id' in eventBody['card'] else '1122334455' # column id
-        # NOTEME: Making sure there is a value for 'column_id' if not setting up with a bogus column_id
-        # This is important as webhook fires on every event to card but we are here only interested if the card is moved to predefined column only
+        # NOTEME: Making sure there is a value for 'column_id' if not setting up with a bogus column_id. 
+        # This is important as webhook fires on every event to card. But we are only interested if the card is moved to predefined column only
 
-        # checking if action is 'moved_column' AND moved to the 'CLOSED' column
-        if cardAction == card_actions[0] and now_columnId == COLUMN_ID :  # This is the criteria we are interested in
+        # Next steps depensing on card action
+        if cardAction == card_actions[0]: # checking if action is 'added', that means this card is just being added to the board as a new task
+            print (do_intoDB(cardId, card_BoradId, now_columnId))
+
+        elif cardAction == card_actions[1] : # checking if action is 'moved_column' 
             print (BOARD_ID)
             print (COLUMN_ID)
 
-            labels_lst = eventBody['card']['labels'] # List of labels in the body
+            if now_columnId == COLUMN_ID : # This is the criteria we are interested in i.e. the 'CLOSED' column
 
-            # checking if this is a recurring task
-            if is_recurring_task(labels_lst):
+                labels_lst = eventBody['card']['labels'] # List of labels in the body
 
-                print (getRecurringTask(labels_lst))
-                recurring_task_tup = getRecurringTask(labels_lst)
-                recurring_task_val = recurring_task_tup[0] # getting the first value of returned tuple Ex. --> (1, 'recurring - DAILY')
+                # checking if this is a recurring task
+                if is_recurring_task(labels_lst):
 
-                # Finsing Task NEW due date accordingly
-                if 'due_date' in eventBody['card']: # checking if 'due_date' key in json object, which is a python dict now
-                    task_dueDate = eventBody['card']['due_date'] # due date in json which is a string
-                    task_dueDate = datetime.fromisoformat(task_dueDate[:-1]) # getting it is python datetime type
-                    # NOTEME: to get Gitkraken Glo date rounding correct, substracting a day
-                    task_dueDate = task_dueDate - timedelta(days=1) 
-                else:
-                    # Due date not set, i.e. not in the json therefore setting task original due date to TODAY
-                    task_dueDate = now_datetime 
+                    print (getRecurringTask(labels_lst))
+                    recurring_task_tup = getRecurringTask(labels_lst)
+                    recurring_task_val = recurring_task_tup[0] # getting the first value of returned tuple Ex. --> (1, 'recurring - DAILY')
 
-                print (task_dueDate)
+                    # Finsing Task NEW due date accordingly
+                    if 'due_date' in eventBody['card']: # checking if 'due_date' key in json object, which is a python dict now
+                        task_dueDate = eventBody['card']['due_date'] # due date in json which is a string
+                        task_dueDate = datetime.fromisoformat(task_dueDate[:-1]) # getting it is python datetime type
+                        # NOTEME: to get Gitkraken Glo date rounding correct, substracting a day
+                        task_dueDate = task_dueDate - timedelta(days=1) 
+                    else:
+                        # Due date not set, i.e. not in the json therefore setting task original due date to TODAY
+                        task_dueDate = now_datetime 
 
-                print (taks_new_dueDate(task_dueDate, recurring_task_val))
+                    print (task_dueDate)
 
-                print (event_body)
+                    print (taks_new_dueDate(task_dueDate, recurring_task_val))
 
-                # THIS IS GOOD
-                # XX(event_body)
+                    print (event_body)
 
-                #TODO: now that we there is a task that is found, This should be done on a seperate function
-                    # See either we can edit the exsisting card (preferred)
-                    # If not need to re-create the card with all the info
+                    # THIS IS GOOD
+                    # XX(event_body)
+
+                    #TODO: now that we there is a task that is found, This should be done on a seperate function
+                        # See either we can edit the exsisting card (preferred)
+                        # If not need to re-create the card with all the info
 
                 
         # TODO: 
