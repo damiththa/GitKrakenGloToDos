@@ -98,6 +98,9 @@ def cardinfo_intoDB(cardID, boardID, columnID):
         cardID {string} -- Id of the card
         boardID {string} -- Id of the board
         columnID {string} -- Id of the column
+    
+    Returns:
+        [string] -- [Returns the response gets back from dynamodb for the operation]
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID)
@@ -112,3 +115,25 @@ def cardinfo_intoDB(cardID, boardID, columnID):
     )
 
     return response
+
+def cardInfo_deleteFromDB(cardID, boardID):
+    """Deletes the card from the database
+    
+    Arguments:
+        cardID {string} -- Id of the card
+        boardID {string} -- Id of the board
+    
+    Returns:
+        [object] -- [Returns the response gets back from dynamodb for the operation]
+    """
+
+    board_card_Id = db_entry_formatter(boardID, cardID)
+
+    # delete from dynamodb table
+    res = table.delete_item(
+        Key = {
+            'Board#Card': board_card_Id
+        }
+    )
+
+    return res
