@@ -138,14 +138,14 @@ def cardInfo_deleteFromDB(cardID, boardID):
 
     return res['ResponseMetadata']['HTTPStatusCode']
 
-def cardInfo_updateDB(cardID, boardID, columnID):
+def cardInfo_updateDB(cardID, boardID, columnID, card_position):
     """Updates the entry in the database
     
     Arguments:
         cardID {string} -- Id of the card
         boardID {string} -- Id of the board
         columnID {string} -- Id of the column
-        
+        card_position {integer} -- Card position in the column
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID) 
@@ -156,13 +156,16 @@ def cardInfo_updateDB(cardID, boardID, columnID):
         Key = {
             'Board#Card': board_card_Id
         },
-        UpdateExpression = 'SET #colName = :colValue',
+        UpdateExpression = 'SET #colName = :colValue, #colName2 = :colValue2',
         ExpressionAttributeNames = {
-            '#colName': 'Card#Column'
+            '#colName': 'Card#Column',
+            '#colName2': 'card_position'
         },
         ExpressionAttributeValues = {
-            ':colValue' : card_column_Id
-        }
+            ':colValue' : card_column_Id,
+            ':colValue2' : card_position
+        },
+        ReturnValues="UPDATED_NEW"
     )
 
 def cardInfo_getFromDB(cardID, boardID):

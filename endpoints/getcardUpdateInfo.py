@@ -22,7 +22,7 @@ COLUMN_ID = os.environ['COLUMN_ID']
 POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
 
 # interested card actions list
-card_actions = ['added', 'deleted', 'moved_column']
+card_actions = ['added', 'deleted', 'reordered', 'moved_column']
 
 # posting to fusionqc activity logger lambda
 def post_to_card_update(boardID, cardID, columnID, dueDate, card_position):
@@ -47,7 +47,7 @@ def post_to_card_update(boardID, cardID, columnID, dueDate, card_position):
     print (res.status_code)
 
 def handler(event, context):
-    print (event)
+    # print (event)
     
     event_body = event['body']
     event_headers = event['headers']
@@ -60,7 +60,7 @@ def handler(event, context):
     if verifySignature(event_body, glo_signature):
         # We PASSED and verified. Good to go
         
-        print (event_body)
+        # print (event_body)
 
         eventBody = json.loads(event_body) # converting string into a pythong dict. object
 
@@ -72,8 +72,10 @@ def handler(event, context):
 
         cardId = eventBody['card']['id']
         card_BoradId = eventBody['card']['board_id']
+
+        # NOTEME: Making sure there is a value for 'column_id' if not setting up with a default / bogus value
+        card_column_position = eventBody['card']['position'] if 'position' in eventBody['card'] else 0 # card position in the column
         now_columnId = eventBody['card']['column_id'] if 'column_id' in eventBody['card'] else '1122334455' # column id
-        # NOTEME: Making sure there is a value for 'column_id' if not setting up with a bogus column_id. 
         # This is important as webhook fires on every event to card. But we are only interested if the card is moved to predefined column only
 
         # Next steps depensing on card action
@@ -83,10 +85,13 @@ def handler(event, context):
         elif cardAction == card_actions[1]: # checking if action is 'deleted', that means this card is deleted from this board
             do_deleteFromDB(cardId, card_BoradId)
 
-        elif cardAction == card_actions[2] : # checking if action is 'moved_column' 
+        elif cardAction == card_actions[2]  : # checking if action is 'reordered', that means this card is reordered in the column
+            do_updateDB(cardId, card_BoradId, now_columnId, card_column_position)
+
+        elif cardAction == card_actions[3] : # checking if action is 'moved_column' 
 
             if now_columnId != COLUMN_ID : # Checking card new column
-                do_updateDB(cardId, card_BoradId, now_columnId)
+                do_updateDB(cardId, card_BoradId, now_columnId, card_column_position)
 
             else: # This is the criteria we are interested in i.e. card is moved to the 'CLOSED' column
 
@@ -113,8 +118,8 @@ def handler(event, context):
                     # print (task_new_dueDate(task_dueDate, recurring_task_val))
                     # print (event_body)
 
-                    card_dueDate = task_new_dueDate(task_dueDate, recurring_task_val) # Task new due date accoding to the recurring lable that is assigned to it
-                    card_column_position = eventBody['card']['position'] # card position in the column
+                    # Task new due date accoding to the recurring lable that is assigned to it
+                    card_dueDate = task_new_dueDate(task_dueDate, recurring_task_val) 
 
                     # print (card_dueDate)
                     # print (card_column_position)
