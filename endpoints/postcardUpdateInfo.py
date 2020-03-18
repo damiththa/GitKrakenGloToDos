@@ -10,31 +10,35 @@ COLUMN_ID = os.environ['COLUMN_ID']
 # endpoint
 POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
 
+# Glo webhook
+GLO_API_AUTH_TOKEN = os.environ['GLO_API_AUTH_TOKEN']
+
 def handler(event, context):
-    print ('------------------------')
-    print (event)
+    # print (event)
 
-    cardBody = {
-        "name": "NEW NAME - Testing card - NEW TEST",
-        "position": 0,
-        "description": {"text":"added this desc\n\nDesc 2\nDesc 3"},
-        "column_id": "5e29201b70ae270011d1e5b5",
-        "labels": [{"name":"recuring task - MONTHLY","id":"5e1b3155553d4500116e11da"}],
-        "due_date": "2020-07-25"
-    }
+    event_body = event['body']
+    # print (event_body)
+    
+    eventBody = json.loads(event_body) # converting string into a pythong dict. object
+    cardInfo = eventBody['cardInfoToPost']
+    # print (cardInfo) 
 
-    url = 'https://gloapi.gitkraken.com/v1/glo/boards/5e1b2b8a553d4500116e117d/cards/5e483eb80e8c720011032f21'
-    headers = {
-        'Content-Type' : 'application/json'
-    }
     payload = {
-        "messageToPublish" : cardBody
+        "position": cardInfo['card_position'],
+        "column_id": '5e28527c1d0b4a00107c3884', #cardInfo['columnID'],
+        "due_date": cardInfo['cardDueDate']
+    }
+    
+    url = 'https://gloapi.gitkraken.com/v1/glo/boards/' + cardInfo['boardID'] + '/cards/' + cardInfo['cardID']
+    headers = {
+        'Content-Type' : 'application/json',
+        'Authorization' : GLO_API_AUTH_TOKEN
     }
 
     print (url)
-    # res = requests.post(url, headers=headers, data=json.dumps(payload))
-    # print (res.status_code)
-    # print (res.content)
+    res = requests.post(url, headers=headers, data=json.dumps(payload))
+    print (res.status_code)
+    print (res.content)
 
     #TODO: this needs to be more meaningful
     # aws lambda return response

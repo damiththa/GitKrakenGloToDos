@@ -11,6 +11,7 @@ provider:
   environment:
     # Glo webhook 
     GLO_WEBHOOK_SECRET: ${file(./commons/secrets.env.yml):gloAPI.GLO_WEBHOOK_SECRET}
+    GLO_API_AUTH_TOKEN: ${file(./commons/secrets.env.yml):gloAPI.GLO_API_AUTH_TOKEN}
     # GLO Board info
     BOARD_ID: ${file(./commons/secrets.env.yml):gloBoard.BOARD_ID}
     COLUMN_ID: ${file(./commons/secrets.env.yml):gloBoard.COLUMN_ID}

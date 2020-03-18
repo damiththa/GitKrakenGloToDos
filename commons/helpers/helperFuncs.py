@@ -61,7 +61,7 @@ def getRecurringTask(lable_dict_lst):
 
     return thisTask_recurringTasksLabels_lst[0] # from the list of tuples sorted in ascending order, returning the first tuple
 
-def taks_new_dueDate(original_task_dueDate, recurring_task_val):
+def task_new_dueDate(original_task_dueDate, recurring_task_val):
     """Returns the due date for the task.
     This function sets the due date according to the passed in recurring task value. 
 
@@ -100,7 +100,7 @@ def cardinfo_intoDB(cardID, boardID, columnID):
         columnID {string} -- Id of the column
     
     Returns:
-        [string] -- [Returns the status response gets back from dynamodb for the operation]
+        [integer] -- [Returns the status response gets back from dynamodb for the operation]
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID)
@@ -124,7 +124,7 @@ def cardInfo_deleteFromDB(cardID, boardID):
         boardID {string} -- Id of the board
     
     Returns:
-        [object] -- [Returns the status response gets back from dynamodb for the operation]
+        [integer] -- [Returns the status response gets back from dynamodb for the operation]
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID)
@@ -145,9 +145,7 @@ def cardInfo_updateDB(cardID, boardID, columnID):
         cardID {string} -- Id of the card
         boardID {string} -- Id of the board
         columnID {string} -- Id of the column
-    
-    Returns:
-        integer -- Returns the status response gets back from aws when try to retrive the updated entry
+        
     """
 
     board_card_Id = db_entry_formatter(boardID, cardID) 
@@ -166,6 +164,19 @@ def cardInfo_updateDB(cardID, boardID, columnID):
             ':colValue' : card_column_Id
         }
     )
+
+def cardInfo_getFromDB(cardID, boardID):
+    """Retrives the card info from table
+    
+    Arguments:
+        cardID {string} -- Id of the card
+        boardID {string} -- Id of the board
+    
+    Returns:
+        integer -- [Returns the status response gets back from dynamodb for the operation]
+    """
+
+    board_card_Id = db_entry_formatter(boardID, cardID)
 
     # getting that updated item
     res = table.get_item(

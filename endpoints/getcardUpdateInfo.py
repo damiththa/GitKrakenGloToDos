@@ -7,7 +7,7 @@ import requests
 from commons.auths.checkSignature import verifySignature
 
 # helpers
-from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, taks_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB, cardInfo_updateDB as do_updateDB
+from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, task_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB, cardInfo_updateDB as do_updateDB
 
 from datetime import datetime, timedelta
 from pytz import timezone # to work with correct timezones
@@ -16,7 +16,7 @@ now_datetime = datetime.now(timezone('US/Eastern')) # data/time in the correct t
 
 # Glo
 BOARD_ID = os.environ['BOARD_ID'] # CHECKME: and see whether this is important to be a environ. varible
-COLUMN_ID = os.environ['COLUMN_ID']
+COLUMN_ID = os.environ['COLUMN_ID'] 
 
 # endpoints
 POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
@@ -25,21 +25,29 @@ POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
 card_actions = ['added', 'deleted', 'moved_column']
 
 # posting to fusionqc activity logger lambda
-def XX(eBody):
+def post_to_card_update(boardID, cardID, columnID, dueDate, card_position):
+    # card info into an object to POST
+    cardInfo = {
+        'boardID' : boardID,
+        'cardID' : cardID,
+        'columnID' : columnID,
+        'cardDueDate' : str(dueDate),
+        'card_position' : card_position
+    }
 
     url = POST_CARDUPDATES_ENDPOINT
     headers = {
         'Content-Type' : 'application/json'
     }
     payload = {
-        "messageToPublish" : eBody
+        "cardInfoToPost" : cardInfo
     }
 
     res = requests.post(url, headers=headers, data=json.dumps(payload))
     print (res.status_code)
 
 def handler(event, context):
-    # print (event)
+    print (event)
     
     event_body = event['body']
     event_headers = event['headers']
@@ -76,20 +84,18 @@ def handler(event, context):
             do_deleteFromDB(cardId, card_BoradId)
 
         elif cardAction == card_actions[2] : # checking if action is 'moved_column' 
-            print (BOARD_ID)
-            print (COLUMN_ID)
 
             if now_columnId != COLUMN_ID : # Checking card new column
                 do_updateDB(cardId, card_BoradId, now_columnId)
 
-            else: # This is the criteria we are interested in i.e. the 'CLOSED' column
+            else: # This is the criteria we are interested in i.e. card is moved to the 'CLOSED' column
 
                 labels_lst = eventBody['card']['labels'] # List of labels in the body
 
                 # checking if this is a recurring task
                 if is_recurring_task(labels_lst):
 
-                    print (getRecurringTask(labels_lst))
+                    # print (getRecurringTask(labels_lst))
                     recurring_task_tup = getRecurringTask(labels_lst)
                     recurring_task_val = recurring_task_tup[0] # getting the first value of returned tuple Ex. --> (1, 'recurring - DAILY')
 
@@ -103,14 +109,21 @@ def handler(event, context):
                         # Due date not set, i.e. not in the json therefore setting task original due date to TODAY
                         task_dueDate = now_datetime 
 
-                    print (task_dueDate)
+                    # print (task_dueDate)
+                    # print (task_new_dueDate(task_dueDate, recurring_task_val))
+                    # print (event_body)
 
-                    print (taks_new_dueDate(task_dueDate, recurring_task_val))
+                    card_dueDate = task_new_dueDate(task_dueDate, recurring_task_val) # Task new due date accoding to the recurring lable that is assigned to it
+                    card_column_position = eventBody['card']['position'] # card position in the column
 
-                    print (event_body)
+                    # print (card_dueDate)
+                    # print (card_column_position)
+                    # print (card_BoradId)
+                    # print (cardId)
+                    # print (now_columnId)
 
-                    # THIS IS GOOD
-                    # XX(event_body)
+                    # posting card update
+                    post_to_card_update(card_BoradId, cardId, now_columnId, card_dueDate, card_column_position)
 
                     #TODO: now that we there is a task that is found, This should be done on a seperate function
                         # See either we can edit the exsisting card (preferred)
