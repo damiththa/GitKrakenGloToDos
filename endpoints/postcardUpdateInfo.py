@@ -25,7 +25,7 @@ def handler(event, context):
 
     payload = {
         "position": cardInfo['card_position'],
-        "column_id": '5e28527c1d0b4a00107c3884', #cardInfo['columnID'],
+        "column_id": cardInfo['columnID'],
         "due_date": cardInfo['cardDueDate']
     }
     
@@ -35,10 +35,10 @@ def handler(event, context):
         'Authorization' : GLO_API_AUTH_TOKEN
     }
 
-    print (url)
+    # print (url)
     res = requests.post(url, headers=headers, data=json.dumps(payload))
     print (res.status_code)
-    print (res.content)
+    # print (res.content)
 
     #TODO: this needs to be more meaningful
     # aws lambda return response

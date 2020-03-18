@@ -26,7 +26,7 @@ def is_recurring_task(lable_dict_lst):
 
     isRecurringTask = False # defailt value
     for label_dict in lable_dict_lst:
-        print (label_dict)
+        # print (label_dict)
         # Ex. --> {'name': 'recuring task - MONTHLY', 'id': '5e1b3155553d4500116e11da'}
         if label_dict['name'] in helpVals.recurring_tasks_dict :
             isRecurringTask = True
@@ -188,4 +188,6 @@ def cardInfo_getFromDB(cardID, boardID):
         }
     )
 
-    return res['ResponseMetadata']['HTTPStatusCode']
+    return res['Item']
+
+    # return res['ResponseMetadata']['HTTPStatusCode']

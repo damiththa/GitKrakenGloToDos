@@ -7,7 +7,7 @@ import requests
 from commons.auths.checkSignature import verifySignature
 
 # helpers
-from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, task_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB, cardInfo_updateDB as do_updateDB
+from commons.helpers.helperFuncs import is_recurring_task, getRecurringTask, task_new_dueDate, cardinfo_intoDB as do_intoDB, cardInfo_deleteFromDB as do_deleteFromDB, cardInfo_updateDB as do_updateDB, cardInfo_getFromDB
 
 from datetime import datetime, timedelta
 from pytz import timezone # to work with correct timezones
@@ -25,14 +25,29 @@ POST_CARDUPDATES_ENDPOINT = os.environ['POST_CARDUPDATES_ENDPOINT']
 card_actions = ['added', 'deleted', 'reordered', 'moved_column']
 
 # posting to fusionqc activity logger lambda
-def post_to_card_update(boardID, cardID, columnID, dueDate, card_position):
+def post_to_card_update(boardID, cardID, columnID, dueDate):
+
+    # getting cards' latest info from db
+    rtn = cardInfo_getFromDB(cardID, boardID)
+    # print (rtn['Card#Column'])
+    # print (int(rtn['card_position']))
+
+    # card position in the column
+    cardPosition = int(rtn['card_position']) # NOTEME: Becuase dynamodb stores it and then return is as decimal, therefore converting to integer
+
+    # columnID
+    clmID = rtn['Card#Column'].split('#',1)[-1]
+    # NOTEME: getting just to columnID from a string that contains CardID and ColumnID Ex --> 5e7292231332eb0011128a54#5e1c7a8f0af39d00106c645e 
+    # As seen here --> https://stackoverflow.com/a/57064170/789782
+    
+
     # card info into an object to POST
     cardInfo = {
         'boardID' : boardID,
         'cardID' : cardID,
-        'columnID' : columnID,
+        'columnID' : clmID,
         'cardDueDate' : str(dueDate),
-        'card_position' : card_position
+        'card_position' : cardPosition
     }
 
     url = POST_CARDUPDATES_ENDPOINT
@@ -63,6 +78,7 @@ def handler(event, context):
         # print (event_body)
 
         eventBody = json.loads(event_body) # converting string into a pythong dict. object
+        print (eventBody)
 
         # print (eventBody['action'])
         # print (eventBody['card'])
@@ -71,7 +87,7 @@ def handler(event, context):
         cardAction = eventBody['action'] # card action i.e. what triggered this call
 
         cardId = eventBody['card']['id']
-        card_BoradId = eventBody['card']['board_id']
+        card_BoardId = eventBody['board']['id']
 
         # NOTEME: Making sure there is a value for 'column_id' if not setting up with a default / bogus value
         card_column_position = eventBody['card']['position'] if 'position' in eventBody['card'] else 0 # card position in the column
@@ -80,18 +96,18 @@ def handler(event, context):
 
         # Next steps depensing on card action
         if cardAction == card_actions[0]: # checking if action is 'added', that means this card is just being added to the board as a new task
-            do_intoDB(cardId, card_BoradId, now_columnId)
+            do_intoDB(cardId, card_BoardId, now_columnId)
 
         elif cardAction == card_actions[1]: # checking if action is 'deleted', that means this card is deleted from this board
-            do_deleteFromDB(cardId, card_BoradId)
+            do_deleteFromDB(cardId, card_BoardId)
 
         elif cardAction == card_actions[2]  : # checking if action is 'reordered', that means this card is reordered in the column
-            do_updateDB(cardId, card_BoradId, now_columnId, card_column_position)
+            do_updateDB(cardId, card_BoardId, now_columnId, card_column_position)
 
         elif cardAction == card_actions[3] : # checking if action is 'moved_column' 
 
             if now_columnId != COLUMN_ID : # Checking card new column
-                do_updateDB(cardId, card_BoradId, now_columnId, card_column_position)
+                do_updateDB(cardId, card_BoardId, now_columnId, card_column_position)
 
             else: # This is the criteria we are interested in i.e. card is moved to the 'CLOSED' column
 
@@ -123,12 +139,12 @@ def handler(event, context):
 
                     # print (card_dueDate)
                     # print (card_column_position)
-                    # print (card_BoradId)
+                    # print (card_BoardId)
                     # print (cardId)
                     # print (now_columnId)
 
                     # posting card update
-                    post_to_card_update(card_BoradId, cardId, now_columnId, card_dueDate, card_column_position)
+                    post_to_card_update(card_BoardId, cardId, now_columnId, card_dueDate)
 
                     #TODO: now that we there is a task that is found, This should be done on a seperate function
                         # See either we can edit the exsisting card (preferred)
